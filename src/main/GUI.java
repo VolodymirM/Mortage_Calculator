@@ -2,6 +2,7 @@ package main;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.*;
 
 import mortages.*;
 
@@ -29,7 +30,7 @@ public class GUI {
     
     private static JLabel repaymentLabel;
     private static DefaultListModel<String> repaymentModel;
-    private static JList<String> repaymenList;
+    private static JList<String> repaymentList;
 
     private static final String[] column = {"Month", "Amount(€)", "Portion", "Percente(%)", "Left to pay"};
     private static DefaultTableModel model = new DefaultTableModel(column, 0);
@@ -37,6 +38,9 @@ public class GUI {
     private static JScrollPane scrollPane;
 
     private static JButton calculateButton;
+
+    private static boolean isDefering = false;
+    private static String scheduleModel = "";
 
     public GUI() {
         JPanel panel = new JPanel();
@@ -118,6 +122,26 @@ public class GUI {
         deferDurationText.setBounds(330, 100, 40, 25);
         deferDurationText.setEditable(false);
         panel.add(deferDurationText);
+
+        deferCheckBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                isDefering = !isDefering;
+                if (isDefering) {
+                    deferMonthText.setEditable(true);
+                    deferDurationText.setEditable(true);
+                }
+                else {
+                    deferMonthText.setEditable(false);
+                    deferDurationText.setEditable(false);
+                }
+            }
+        });
+
+        // Calculate button
+        calculateButton = new JButton("Calculate");
+        calculateButton.setEnabled(false);
+        calculateButton.setBounds(270, 140, 100, 36);
+        panel.add(calculateButton);
         
         // Repayment schedule
         repaymentLabel = new JLabel("Repayment schedule: ");
@@ -127,9 +151,17 @@ public class GUI {
         repaymentModel = new DefaultListModel<>();
         repaymentModel.addElement("Annuity");
         repaymentModel.addElement("Linear");
-        repaymenList = new JList<>(repaymentModel);
-        repaymenList.setBounds(140, 140, 50, 36);
-        panel.add(repaymenList);
+        repaymentList = new JList<>(repaymentModel);
+        repaymentList.setBounds(140, 140, 50, 36);
+        panel.add(repaymentList);
+
+        repaymentList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                calculateButton.setEnabled(true);
+                scheduleModel = repaymentList.getSelectedValue();
+                System.out.println(scheduleModel);
+            }
+        });
 
         // Data table
         dataTable = new JTable(model);
@@ -138,11 +170,6 @@ public class GUI {
         scrollPane = new JScrollPane(dataTable);
         scrollPane.setBounds(14, 190, 370, 150);
         panel.add(scrollPane);
-
-        // Calculate button
-        calculateButton = new JButton("Calculate");
-        calculateButton.setBounds(270, 140, 100, 36);
-        panel.add(calculateButton);
 
         frame.setVisible(true);
     }
