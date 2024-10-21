@@ -7,7 +7,7 @@ import java.awt.event.*;
 import mortages.*;
 
 public class GUI {
-
+    // UI components
     private static JLabel loanLabel;
     private static JTextField loanText;
     private static JLabel euroLabel;
@@ -39,8 +39,33 @@ public class GUI {
 
     private static JButton calculateButton;
 
+    // Internal variables
     private static boolean isDefering = false;
     private static String scheduleModel = "";
+    private static Mortage mortage;
+    private static double loanAmount = 0.0;
+    private static double annualInterest = 0.0;
+    private static int returnYears = 0;
+    private static int returnMonths = 0;
+    private static int defermentMonth = 0;
+    private static int defermentTerm = 0;
+    private static String[][] data;
+
+    private static void setData(String[][] data) {
+        GUI.data = data;
+    }
+
+    private void changeTablesData(String[][] data) {
+        //TODO tables change's logic
+    }
+
+    private boolean checkDefermentValues() {
+        if (isDefering && ((defermentMonth == 0) || (defermentMonth > (returnYears * 12 + returnMonths)) || defermentTerm < 1))
+            return false;
+        return true;
+    }
+
+    
 
     public GUI() {
         JPanel panel = new JPanel();
@@ -123,20 +148,6 @@ public class GUI {
         deferDurationText.setEditable(false);
         panel.add(deferDurationText);
 
-        deferCheckBox.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-                isDefering = !isDefering;
-                if (isDefering) {
-                    deferMonthText.setEditable(true);
-                    deferDurationText.setEditable(true);
-                }
-                else {
-                    deferMonthText.setEditable(false);
-                    deferDurationText.setEditable(false);
-                }
-            }
-        });
-
         // Calculate button
         calculateButton = new JButton("Calculate");
         calculateButton.setEnabled(false);
@@ -159,7 +170,8 @@ public class GUI {
             if (!e.getValueIsAdjusting()) {
                 calculateButton.setEnabled(true);
                 scheduleModel = repaymentList.getSelectedValue();
-                System.out.println(scheduleModel);
+                System.out.println(scheduleModel + " selected");
+                
             }
         });
 
@@ -172,5 +184,72 @@ public class GUI {
         panel.add(scrollPane);
 
         frame.setVisible(true);
+        
+        // Action listeners
+        deferCheckBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                isDefering = !isDefering;
+                if (isDefering) {
+                    deferMonthText.setEditable(true);
+                    deferDurationText.setEditable(true);
+                }
+                else {
+                    deferMonthText.setEditable(false);
+                    deferDurationText.setEditable(false);
+                }
+            }
+        });
+        
+        calculateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    loanAmount = Double.parseDouble(loanText.getText());
+                    annualInterest = Double.parseDouble(percentText.getText());
+                    returnYears = Integer.parseInt(yearText.getText());
+                    returnMonths = Integer.parseInt(monthText.getText());
+
+                    if (isDefering) {
+                        defermentMonth = Integer.parseInt(deferMonthText.getText());
+                        defermentTerm = Integer.parseInt(deferDurationText.getText());
+                    }
+
+                } catch (NumberFormatException exception) {
+                    JOptionPane.showMessageDialog(null, "Calculation error! Wrong format of the entered data.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    System.out.println("Wrong format");
+                    return;
+                }
+                
+                if (checkDefermentValues() == false) {
+                    JOptionPane.showMessageDialog(null, "Calculation error! Check deferement values.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    System.out.println("Wrong values");
+                    return;
+                }
+                
+                if (scheduleModel == "Annuity") {
+                    mortage = new Annuity(loanAmount, annualInterest, returnYears, returnMonths, defermentMonth, defermentTerm);
+                    System.out.println("Annuity");
+                } else if (scheduleModel == "Linear") {
+                    mortage = new Linear(loanAmount, annualInterest, returnYears, returnMonths, defermentMonth, defermentTerm);
+                    System.out.println("Linear");
+                }
+                
+                model.setRowCount(0);
+
+                if (isDefering) {
+                    String[][] calctulatedData = mortage.CalculateWithDeferement();
+                    setData(calctulatedData);
+                }
+                else {
+                    String[][] calctulatedData = mortage.Calculate();
+                    setData(calctulatedData);
+                }
+                
+                // TODO Calculation, table's changing
+                changeTablesData(data);
+                System.out.println("Calculated");
+            } 
+        });
     }
+
 }
