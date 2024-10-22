@@ -8,7 +8,7 @@ public abstract class Mortage {
     protected int returnMonths = 0;
     protected int defermentMonth = 0;
     protected int defermentTerm = 0;
-    protected final double defermentMonthFine = 0.3;
+    protected final double defermentMonthFine = 0.03;
 
     public Mortage(double loanAmount, double annualInterest, int returnYears, int returnMonths, int defermentMonth, int defermentTerm) {
         this.loanAmount = loanAmount;
@@ -22,6 +22,10 @@ public abstract class Mortage {
     public abstract String[][] Calculate();
     public abstract String[][] CalculateWithDeferement();
     
+    protected double calculateLoanAmount() {
+        return (loanAmount + loanAmount * annualInterest * returnYears / 100);
+    }
+
     public double getLoanAmount() {
         return loanAmount;
     }

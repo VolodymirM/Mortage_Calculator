@@ -56,7 +56,8 @@ public class GUI {
     }
 
     private void changeTablesData(String[][] data) {
-        //TODO tables change's logic
+        for (int i = 0; i < data.length; ++i)
+            model.addRow(new Object[]{data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]});
     }
 
     private boolean checkDefermentValues() {
@@ -65,7 +66,11 @@ public class GUI {
         return true;
     }
 
-    
+    private static boolean checkReturnTerm() {
+        if (returnMonths > 11 || returnYears < 0)
+            return false;
+        return true;
+    }
 
     public GUI() {
         JPanel panel = new JPanel();
@@ -225,6 +230,12 @@ public class GUI {
                     System.out.println("Wrong values");
                     return;
                 }
+
+                if (checkReturnTerm() == false) {
+                    JOptionPane.showMessageDialog(null, "Calculation error! Check return term values.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    System.out.println("Wrong return term values");
+                    return;
+                }
                 
                 if (scheduleModel == "Annuity") {
                     mortage = new Annuity(loanAmount, annualInterest, returnYears, returnMonths, defermentMonth, defermentTerm);
@@ -244,8 +255,7 @@ public class GUI {
                     String[][] calctulatedData = mortage.Calculate();
                     setData(calctulatedData);
                 }
-                
-                // TODO Calculation, table's changing
+
                 changeTablesData(data);
                 System.out.println("Calculated");
             } 
