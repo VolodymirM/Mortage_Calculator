@@ -55,13 +55,19 @@ public class GUI {
         GUI.data = data;
     }
 
+    private boolean checkPositives() {
+        if (loanAmount <= 0 || annualInterest < 0 || returnYears < 0 || returnMonths < 0)
+            return false;
+        return true;
+    } 
+    
     private void changeTablesData(String[][] data) {
         for (int i = 0; i < data.length; ++i)
             model.addRow(new Object[]{data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]});
     }
 
     private boolean checkDefermentValues() {
-        if (isDefering && ((defermentMonth == 0) || (defermentMonth > (returnYears * 12 + returnMonths)) || defermentTerm < 1))
+        if (isDefering && ((defermentMonth <= 0) || (defermentMonth > (returnYears * 12 + returnMonths)) || defermentTerm < 1))
             return false;
         return true;
     }
@@ -225,6 +231,12 @@ public class GUI {
                     return;
                 }
                 
+                if (checkPositives() == false) {
+                    JOptionPane.showMessageDialog(null, "Calculation error! Wrong format of the entered data.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    System.out.println("Wrong format");
+                    return;
+                }
+
                 if (checkDefermentValues() == false) {
                     JOptionPane.showMessageDialog(null, "Calculation error! Check deferement values.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println("Wrong values");
@@ -258,7 +270,8 @@ public class GUI {
 
                 changeTablesData(data);
                 System.out.println("Calculated");
-            } 
+            }
+
         });
     }
 

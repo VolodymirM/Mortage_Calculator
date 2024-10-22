@@ -21,10 +21,7 @@ public abstract class Mortage {
 
     public abstract String[][] Calculate();
     public abstract String[][] CalculateWithDeferement();
-    
-    protected double calculateLoanAmount() {
-        return (loanAmount + loanAmount * annualInterest * returnYears / 100);
-    }
+    protected abstract double calculateLoanAmount();
 
     public double getLoanAmount() {
         return loanAmount;

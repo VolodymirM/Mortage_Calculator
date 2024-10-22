@@ -10,18 +10,21 @@ public class Linear extends Mortage {
     public String[][] Calculate() {
         
         String[][] data = new String[returnYears * 12 + returnMonths][5];
-        
+
         double willBePayed = calculateLoanAmount();
-        double mountlyPayment = willBePayed / (returnYears * 12 + returnMonths);
-        double portion = mountlyPayment / willBePayed;
-        double percentage = portion * 100;
-        
+        double mainMountlyPayment = loanAmount / (returnYears * 12 + returnMonths);
+        double alreadyPaid = 0;
+
         for (int i = 0; i < data.length; ++i) {
+
+            double mountlyPayment = mainMountlyPayment + (loanAmount - mainMountlyPayment * i) * (annualInterest / 100 / 12);
+            alreadyPaid += mountlyPayment;
+
             data[i][0] = Integer.toString(i + 1);
-            data[i][1] = Double.toString(mountlyPayment);
-            data[i][2] = Double.toString(portion);
-            data[i][3] = (Double.toString(percentage) + " %");
-            data[i][4] = Double.toString(willBePayed - mountlyPayment * (i + 1));
+            data[i][1] = String.format("%.2f", mountlyPayment);
+            data[i][2] = String.format("%.4f", mountlyPayment / willBePayed);
+            data[i][3] = String.format("%.2f", mountlyPayment / willBePayed * 100) + " %";
+            data[i][4] = String.format("%.2f", willBePayed - alreadyPaid);
         }
 
         return data;
@@ -32,14 +35,14 @@ public class Linear extends Mortage {
         
         String[][] data = new String[returnYears * 12 + returnMonths + defermentTerm][5];
 
-        double willBePayed = calculateLoanAmount() + loanAmount * defermentMonthFine * defermentTerm;
-        double mountlyPayment = willBePayed / (returnYears * 12 + returnMonths);
-        double portion = mountlyPayment / willBePayed;
-        double percentage = portion * 100;
-        
-        int returnTerm = data.length;
-        
-        for (int i = 0; i < returnTerm; ++i) {
+        double fee = loanAmount * defermentMonthFine * defermentTerm;
+        double willBePayed = calculateLoanAmount() + fee;
+        double mainMountlyPayment = loanAmount / (returnYears * 12 + returnMonths);
+        double alreadyPaid = 0;
+        int index = 0;
+        boolean defered = false;
+
+        for (int i = 0; i < data.length; ++i) {
 
             if (i == defermentMonth - 1) {
                 for (int t = i; t < i + defermentTerm && t < data.length; ++t) {
@@ -47,25 +50,43 @@ public class Linear extends Mortage {
                     data[t][1] = "-";
                     data[t][2] = "-";
                     data[t][3] = "-";
-                    data[t][4] = data[i - 1][4];
+                    data[t][4] = String.format("%.2f", willBePayed - alreadyPaid);
                 }
-
+                index = i;
+                defered = true;
                 i += defermentTerm;
-
             }
 
-            if (i < returnTerm) {
-                data[i][0] = Integer.toString(i + 1);
-                data[i][1] = Double.toString(mountlyPayment);
-                data[i][2] = Double.toString(portion);
-                data[i][3] = (Double.toString(percentage) + " %");
-                data[i][4] = Double.toString(willBePayed - mountlyPayment * (i + 1));
+            if (i < data.length) {
 
-                //TODO Fix "left to pay" after deferemet
+                double mountlyPayment;
+
+                if (defered){
+                    mountlyPayment = mainMountlyPayment + (loanAmount - mainMountlyPayment * index)
+                     * (annualInterest / 100 / 12) + fee / (returnYears * 12 + returnMonths);
+                    ++index;
+                }
+                else
+                    mountlyPayment = mainMountlyPayment + (loanAmount - mainMountlyPayment * i)
+                * (annualInterest / 100 / 12) + fee / (returnYears * 12 + returnMonths);
+                alreadyPaid += mountlyPayment;
+                
+                data[i][0] = Integer.toString(i + 1);
+                data[i][1] = String.format("%.2f", mountlyPayment);
+                data[i][2] = String.format("%.4f", mountlyPayment / willBePayed);
+                data[i][3] = String.format("%.2f", mountlyPayment / willBePayed * 100) + " %";
+                data[i][4] = String.format("%.2f", Math.abs(willBePayed - alreadyPaid));
             }
         }
 
+        
+
         return data;
+    }
+
+    @Override
+    protected double calculateLoanAmount() {
+        return (loanAmount + ((loanAmount * (annualInterest / 100)) / 12) * ((double) (returnYears * 12 + returnMonths + 1) / 2));
     }
 
 }
