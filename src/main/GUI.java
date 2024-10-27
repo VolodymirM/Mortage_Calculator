@@ -1,3 +1,5 @@
+// Vladimir Moskalyuk
+
 package main;
 
 import javax.swing.*;
@@ -39,6 +41,8 @@ public class GUI {
 
     private static JButton calculateButton;
 
+    private static JButton showGraphButton;
+
     // Internal variables
     private static boolean isDefering = false;
     private static String scheduleModel = "";
@@ -62,6 +66,9 @@ public class GUI {
     } 
     
     private void changeTablesData(String[][] data) {
+        
+        model.setRowCount(0);
+
         for (int i = 0; i < data.length; ++i)
             model.addRow(new Object[]{data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]});
     }
@@ -158,12 +165,6 @@ public class GUI {
         deferDurationText.setBounds(330, 100, 40, 25);
         deferDurationText.setEditable(false);
         panel.add(deferDurationText);
-
-        // Calculate button
-        calculateButton = new JButton("Calculate");
-        calculateButton.setEnabled(false);
-        calculateButton.setBounds(270, 140, 100, 36);
-        panel.add(calculateButton);
         
         // Repayment schedule
         repaymentLabel = new JLabel("Repayment schedule: ");
@@ -210,6 +211,12 @@ public class GUI {
                 }
             }
         });
+        
+        // Calculate button
+        calculateButton = new JButton("Calculate");
+        calculateButton.setEnabled(false);
+        calculateButton.setBounds(280, 140, 90, 36);
+        panel.add(calculateButton);
         
         calculateButton.addActionListener(new ActionListener() {
             @Override
@@ -269,10 +276,17 @@ public class GUI {
                 }
 
                 changeTablesData(data);
+                showGraphButton.setEnabled(true);
                 System.out.println("Calculated");
             }
 
         });
+
+        showGraphButton = new JButton("Graph");
+        showGraphButton.setEnabled(false);
+        showGraphButton.setBounds(200, 140, 70, 36);
+        panel.add(showGraphButton);
+
     }
 
 }
