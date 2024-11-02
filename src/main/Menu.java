@@ -7,9 +7,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.event.*;
 
 import mortages.*;
+import data.*;
 
-public class GUI {
+public class Menu {
     // UI components
+    private static JPanel panel;
+    private static JFrame frame;
+
     private static JLabel loanLabel;
     private static JTextField loanText;
     private static JLabel euroLabel;
@@ -47,47 +51,23 @@ public class GUI {
     private static boolean isDefering = false;
     private static String scheduleModel = "";
     private static Mortage mortage;
-    private static double loanAmount = 0.0;
-    private static double annualInterest = 0.0;
-    private static int returnYears = 0;
-    private static int returnMonths = 0;
-    private static int defermentMonth = 0;
-    private static int defermentTerm = 0;
-    private static String[][] data;
+    private static Data data;
 
-    private static void setData(String[][] data) {
-        GUI.data = data;
-    }
-
-    private boolean checkPositives() {
-        if (loanAmount <= 0 || annualInterest < 0 || returnYears < 0 || returnMonths < 0)
-            return false;
-        return true;
-    } 
-    
-    private void changeTablesData(String[][] data) {
+    private void changeTablesData() {
         
+        String[][] dataStringArray = data.getDataTable();
+
         model.setRowCount(0);
 
-        for (int i = 0; i < data.length; ++i)
-            model.addRow(new Object[]{data[i][0], data[i][1], data[i][2], data[i][3], data[i][4]});
+        for (int i = 0; i < dataStringArray.length; ++i)
+            model.addRow(new Object[]{dataStringArray[i][0], dataStringArray[i][1], dataStringArray[i][2], dataStringArray[i][3], dataStringArray[i][4]});
     }
 
-    private boolean checkDefermentValues() {
-        if (isDefering && ((defermentMonth <= 0) || (defermentMonth > (returnYears * 12 + returnMonths)) || defermentTerm < 1))
-            return false;
-        return true;
-    }
+    public Menu() {
+        data = new Data();
 
-    private static boolean checkReturnTerm() {
-        if (returnMonths > 11 || returnYears < 0)
-            return false;
-        return true;
-    }
-
-    public GUI() {
-        JPanel panel = new JPanel();
-        JFrame frame = new JFrame("Mortage Calculator");
+        panel = new JPanel();
+        frame = new JFrame("Mortage Calculator");
         frame.setSize(410,390);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(panel);
@@ -195,6 +175,18 @@ public class GUI {
         scrollPane.setBounds(14, 190, 370, 150);
         panel.add(scrollPane);
 
+        // Calculate button
+        calculateButton = new JButton("Calculate");
+        calculateButton.setEnabled(false);
+        calculateButton.setBounds(280, 140, 90, 36);
+        panel.add(calculateButton);
+        
+        // Show graph
+        showGraphButton = new JButton("Graph");
+        showGraphButton.setEnabled(false);
+        showGraphButton.setBounds(200, 140, 70, 36);
+        panel.add(showGraphButton);
+        
         frame.setVisible(true);
         
         // Action listeners
@@ -212,24 +204,18 @@ public class GUI {
             }
         });
         
-        // Calculate button
-        calculateButton = new JButton("Calculate");
-        calculateButton.setEnabled(false);
-        calculateButton.setBounds(280, 140, 90, 36);
-        panel.add(calculateButton);
-        
         calculateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    loanAmount = Double.parseDouble(loanText.getText());
-                    annualInterest = Double.parseDouble(percentText.getText());
-                    returnYears = Integer.parseInt(yearText.getText());
-                    returnMonths = Integer.parseInt(monthText.getText());
+                    data.setLoanAmount(Double.parseDouble(loanText.getText()));
+                    data.setAnnualInterest(Double.parseDouble(percentText.getText()));
+                    data.setReturnYears(Integer.parseInt(yearText.getText()));
+                    data.setReturnMonths(Integer.parseInt(monthText.getText()));
 
                     if (isDefering) {
-                        defermentMonth = Integer.parseInt(deferMonthText.getText());
-                        defermentTerm = Integer.parseInt(deferDurationText.getText());
+                        data.setDefermentMonth(Integer.parseInt(deferMonthText.getText()));
+                        data.setDefermentTerm(Integer.parseInt(deferDurationText.getText()));
                     }
 
                 } catch (NumberFormatException exception) {
@@ -238,55 +224,60 @@ public class GUI {
                     return;
                 }
                 
-                if (checkPositives() == false) {
+                if (data.checkPositives() == false) {
                     JOptionPane.showMessageDialog(null, "Calculation error! Wrong format of the entered data.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println("Wrong format");
                     return;
                 }
 
-                if (checkDefermentValues() == false) {
+                if (data.checkDefermentValues(isDefering) == false) {
                     JOptionPane.showMessageDialog(null, "Calculation error! Check deferement values.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println("Wrong values");
                     return;
                 }
 
-                if (checkReturnTerm() == false) {
+                if (data.checkReturnTerm() == false) {
                     JOptionPane.showMessageDialog(null, "Calculation error! Check return term values.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.out.println("Wrong return term values");
                     return;
                 }
                 
                 if (scheduleModel == "Annuity") {
-                    mortage = new Annuity(loanAmount, annualInterest, returnYears, returnMonths, defermentMonth, defermentTerm);
+                    mortage = new Annuity(data);
                     System.out.println("Annuity");
                 } else if (scheduleModel == "Linear") {
-                    mortage = new Linear(loanAmount, annualInterest, returnYears, returnMonths, defermentMonth, defermentTerm);
+                    mortage = new Linear(data);
                     System.out.println("Linear");
                 }
                 
                 model.setRowCount(0);
 
-                if (isDefering) {
-                    String[][] calctulatedData = mortage.CalculateWithDeferement();
-                    setData(calctulatedData);
-                }
-                else {
-                    String[][] calctulatedData = mortage.Calculate();
-                    setData(calctulatedData);
-                }
+                if (isDefering) 
+                    data.setDataTable(mortage.CalculateWithDeferement());
+                else 
+                    data.setDataTable(mortage.Calculate());
 
-                changeTablesData(data);
+                changeTablesData();
                 showGraphButton.setEnabled(true);
                 System.out.println("Calculated");
             }
 
         });
 
-        showGraphButton = new JButton("Graph");
-        showGraphButton.setEnabled(false);
-        showGraphButton.setBounds(200, 140, 70, 36);
-        panel.add(showGraphButton);
+        showGraphButton.addActionListener(new ActionListener() {
 
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showGraph();
+            }
+            
+        });
+    }
+
+    private static void showGraph() {
+        new LinearGraph(frame, frame.getLocation(), data);
+        frame.setVisible(false);
+        return;
     }
 
 }

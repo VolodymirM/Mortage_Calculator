@@ -1,75 +1,77 @@
 package mortages;
 
+import data.Data;
+
 public class Annuity extends Mortage {
 
-    public Annuity(double loanAmount, double annualInterest, int returnYears, int returnMonths, int defermentMonth, int defermentTerm) {
-        super(loanAmount, annualInterest, returnYears, returnMonths, defermentMonth, defermentTerm);
+    public Annuity(Data data) {
+        super(data);
     }
 
     @Override
     public String[][] Calculate() {
         
-        String[][] data = new String[returnYears * 12 + returnMonths][5];
+        String[][] dataStringArray = new String[data.getReturnYears() * 12 + data.getReturnMonths()][5];
 
         double willBePayed = calculateLoanAmount();
-        double mountlyPayment = willBePayed / (returnYears * 12 + returnMonths);
+        double mountlyPayment = willBePayed / (data.getReturnYears() * 12 + data.getReturnMonths());
         double portion = mountlyPayment / willBePayed;
         double percentage = portion * 100;
         
-        for (int i = 0; i < data.length; ++i) {
-            data[i][0] = Integer.toString(i + 1);
-            data[i][1] = String.format("%.2f", mountlyPayment);
-            data[i][2] = String.format("%.4f", portion);
-            data[i][3] = String.format("%.2f", percentage) + " %";
-            data[i][4] = String.format("%.2f", willBePayed - mountlyPayment * (i + 1));
+        for (int i = 0; i < dataStringArray.length; ++i) {
+            dataStringArray[i][0] = Integer.toString(i + 1);
+            dataStringArray[i][1] = String.format("%.2f", mountlyPayment);
+            dataStringArray[i][2] = String.format("%.4f", portion);
+            dataStringArray[i][3] = String.format("%.2f", percentage) + " %";
+            dataStringArray[i][4] = String.format("%.2f", willBePayed - mountlyPayment * (i + 1));
         }
 
-        return data;
+        return dataStringArray;
     }
 
     @Override
     public String[][] CalculateWithDeferement() {
         
-        String[][] data = new String[returnYears * 12 + returnMonths + defermentTerm][5];
+        String[][] dataStringArray = new String[data.getReturnYears() * 12 + data.getReturnMonths() + data.getDefermentTerm()][5];
 
-        double willBePayed = calculateLoanAmount() + loanAmount * defermentMonthFine * defermentTerm;
-        double mountlyPayment = willBePayed / (returnYears * 12 + returnMonths);
+        double willBePayed = calculateLoanAmount() + data.getLoanAmount() * defermentMonthFine * data.getDefermentTerm();
+        double mountlyPayment = willBePayed / (data.getReturnYears() * 12 + data.getReturnMonths());
         double portion = mountlyPayment / willBePayed;
         double percentage = portion * 100;
 
         int helpIndex = 0;
 
-        for (int i = 0; i < data.length; ++i) {
+        for (int i = 0; i < dataStringArray.length; ++i) {
 
-            if (i == defermentMonth - 1) {
-                for (int t = i; t < i + defermentTerm && t < data.length; ++t) {
-                    data[t][0] = Integer.toString(t + 1);
-                    data[t][1] = "-";
-                    data[t][2] = "-";
-                    data[t][3] = "-";
-                    data[t][4] = data[i - 1][4];
+            if (i == data.getDefermentMonth() - 1) {
+                for (int t = i; t < i + data.getDefermentTerm() && t < dataStringArray.length; ++t) {
+                    dataStringArray[t][0] = Integer.toString(t + 1);
+                    dataStringArray[t][1] = "-";
+                    dataStringArray[t][2] = "-";
+                    dataStringArray[t][3] = "-";
+                    dataStringArray[t][4] = dataStringArray[i - 1][4];
                 }
 
-                i += defermentTerm;
-                helpIndex = defermentTerm;
+                helpIndex = data.getDefermentTerm();
+                i += helpIndex;
 
             }
 
-            if (i < data.length) {
-                data[i][0] = Integer.toString(i + 1);
-                data[i][1] = String.format("%.2f", mountlyPayment);
-                data[i][2] = String.format("%.4f", portion);
-                data[i][3] = String.format("%.2f", percentage) + " %";
-                data[i][4] = String.format("%.2f", willBePayed - mountlyPayment * (i - helpIndex + 1));
+            if (i < dataStringArray.length) {
+                dataStringArray[i][0] = Integer.toString(i + 1);
+                dataStringArray[i][1] = String.format("%.2f", mountlyPayment);
+                dataStringArray[i][2] = String.format("%.4f", portion);
+                dataStringArray[i][3] = String.format("%.2f", percentage) + " %";
+                dataStringArray[i][4] = String.format("%.2f", willBePayed - mountlyPayment * (i - helpIndex + 1));
             }
         }
 
-        return data;
+        return dataStringArray;
     }
 
     @Override
     protected double calculateLoanAmount() {
-        return (loanAmount + loanAmount * annualInterest * returnYears / 100);
+        return (data.getLoanAmount() + data.getLoanAmount() * data.getAnnualInterest() * data.getReturnYears() / 100);
     }
 
 }
