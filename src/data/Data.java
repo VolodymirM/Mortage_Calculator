@@ -2,12 +2,12 @@ package data;
 
 public class Data {
 
-    protected double loanAmount;
-    protected double annualInterest;
-    protected int returnYears;
-    protected int returnMonths;
-    protected int defermentMonth;
-    protected int defermentTerm;
+    private double loanAmount;
+    private double annualInterest;
+    private int returnYears;
+    private int returnMonths;
+    private int defermentMonth;
+    private int defermentTerm;
     protected String[][] dataTable;
 
     public Data() {

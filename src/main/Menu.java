@@ -189,7 +189,7 @@ public class Menu {
         
         frame.setVisible(true);
         
-        // Action listeners
+        // Action listeners - !Command behavioral pattern!
         deferCheckBox.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 isDefering = !isDefering;
